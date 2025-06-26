@@ -7,7 +7,7 @@ import hotelsRoute from "./routes/hotels.js";
 import roomRoute from "./routes/rooms.js";
 import cookieParser from "cookie-parser";
 import { clerkMiddleware } from '@clerk/express'
-
+import clerkWebhook from "./controllers/clerkWebhook.js";
 const app = express();
 dotenv.config();
 
@@ -34,11 +34,11 @@ app.use(cookieParser());
 
 app.use(clerkMiddleware())
 
-
-
+// api to listen to clerk webhooks
+app.use("/api/clerk", clerkWebhook)
 // Middleware
 app.use("/api/auth", authRoute);
-app.use("/api/users", userRoute);
+app.use("/api/user", userRoute);
 app.use("/api/hotels", hotelsRoute);
 app.use("/api/rooms", roomRoute);
 

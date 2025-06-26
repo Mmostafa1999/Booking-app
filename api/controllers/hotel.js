@@ -1,4 +1,5 @@
 import Hotel from '../models/hotels.js';
+import User from '../models/User.js';
 
 // This file contains the controller for hotel-related operations.
 
@@ -13,6 +14,8 @@ export const craeteHotel = async (req, res, next) => {
     next(err);
   }
 }
+
+
 
 // updateHotel
 export const updateHotel = async (req, res, next) => {

@@ -1,45 +1,32 @@
-import User from '../models/User.js';
+// get Api/user
 
-
-// updateUser
-export const updateUser = async (req, res, next) => {
+export const getUserData = async (req, res, next) => {
   try {
-    const updatedUser = await User.findByIdAndUpdate(
-      req.params.id,    
-      { $set: req.body },  /* $set operator is used to update the document */
-      { new: true }   /*this option returns the updated document instead of the original document */
-    );
-    res.status(200).json(updatedUser);
+    const role = req.user.role;
+    const recentSearchCities = req.user.recentSearchCities;
+
+    res.status(200).json({ role, recentSearchCities });
   } catch (err) {
     next(err);
   }
-}
+};
 
-// deleteUser
-export const deleteUser = async (req, res, next) => {
+// store the user recent search cities
+export const storeRecentSearchCities = async (req, res, next) => {
   try {
-    await User.findByIdAndDelete(req.params.id);
-    res.status(200).json({ message: 'User has been deleted' });
-  } catch (err) {
-    next(err);
-  }
-}
+    const { recentSearchCities } = req.body;
+    const user = await req.user;
 
-// getUser
-export const getUser = async (req, res, next) => {
-  try {
-    const user = await User.findById(req.params.id);
-    res.status(200).json(user);
+  if (user.recentSearchCities.length < 3) {
+    user.recentSearchCities.push(recentSearchCities);
+  } else {
+    user.recentSearchCities.shift();
+    user.recentSearchCities.push(recentSearchCities);
+  }
+
+  await user.save();
+  res.status(200).json({ message: "Search cities stored successfully" });
   } catch (err) {
     next(err);
   }
-}   
-// getAllUsers
-export const getAllUsers = async (req, res, next) => {
-  try {
-    const users = await User.find();
-    res.status(200).json(users);
-  } catch (err) {
-    next(err);
-  }
-}
+};
