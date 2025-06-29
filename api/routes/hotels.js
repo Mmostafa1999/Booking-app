@@ -1,24 +1,11 @@
 // create an endpoingt to authenticate users
-import express from 'express';
-import { craeteHotel, getAllHotels, getHotel, deleteHotel, updateHotel } from '../controllers/hotel.js';
-import {  verifyAdmin } from "../utils/verifyToken.js";
+import express from "express";
+import { protect } from './../middleware/authMiddleware.js';
+import { registerHotel } from "../controllers/hotel.js";
 
-const router = express.Router();
+const hotelRouter = express.Router();
 
-// craete 
-router.post('/',  verifyAdmin, craeteHotel);
+// create hotel 
+hotelRouter.post("/", protect, registerHotel);
 
-
-// update
-router.post('/:id', verifyAdmin, updateHotel);
-// delete
-router.delete('/:id', verifyAdmin, deleteHotel);
-
-
-// get by id
-router.get('/:id', getHotel);
-
-// get all
-router.get('/', getAllHotels);
-
-export default router;
+export default hotelRouter;

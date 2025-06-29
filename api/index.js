@@ -1,12 +1,14 @@
-import express from "express";
 import dotenv from "dotenv";
+import express from "express";
 import mongoose from "mongoose";
 import authRoute from "./routes/auth.js";
-import userRoute from "./routes/users.js";
 import hotelsRoute from "./routes/hotels.js";
 import roomRoute from "./routes/rooms.js";
+import userRoute from "./routes/users.js";
+import bookingRoute from "./routes/booking.js";
+import { clerkMiddleware } from "@clerk/express";
 import cookieParser from "cookie-parser";
-import { clerkMiddleware } from '@clerk/express'
+import connectCloudinary from "./cloudinary.js";
 import clerkWebhook from "./controllers/clerkWebhook.js";
 const app = express();
 dotenv.config();
@@ -20,6 +22,9 @@ const connect = async () => {
   }
 };
 
+// connect to cloudinary
+connectCloudinary();
+
 mongoose.connection.on("disconnected", () => {
   console.log("MongoDB disconnected!");
 });
@@ -32,15 +37,16 @@ app.use(express.json());
 
 app.use(cookieParser());
 
-app.use(clerkMiddleware())
+app.use(clerkMiddleware());
 
 // api to listen to clerk webhooks
-app.use("/api/clerk", clerkWebhook)
+app.use("/api/clerk", clerkWebhook);
 // Middleware
 app.use("/api/auth", authRoute);
 app.use("/api/user", userRoute);
 app.use("/api/hotels", hotelsRoute);
 app.use("/api/rooms", roomRoute);
+app.use("/api/booking", bookingRoute);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

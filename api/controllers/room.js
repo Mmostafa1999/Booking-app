@@ -1,76 +1,81 @@
+import { v2 as cloudinary } from "cloudinary";
 import Hotel from "../models/hotels.js";
 import Room from "../models/Rooms.js";
-
-
 // This file contains the controller for room-related operations.
-// createRoom
-export const createRoom = async (req, res, next) => {
-  const hotelId = req.params.hotelid;
-  const newRoom = new Room(req.body);
-
+// api to create a new room
+export const createRoom = async (req, res) => {
   try {
-    const savedRoom = await newRoom.save();
-    try {
-      await Hotel.findByIdAndUpdate(hotelId, {
-        $push: { rooms: savedRoom._id },
-      });
-      res.status(200).json(savedRoom);
-    } catch (err) {
-      next(err);
+    const { roomType, pricePerNight, aminities } = req.body;
+
+    const hotel = await Hotel.findOne({
+      owner: req.auth.userId,
+    }); /* check if the hotel exists */
+    if (!hotel) {
+      return res.status(404).json({ message: "Hotel not found" });
     }
+
+    // upload images to cloudinary
+
+    const uploadImages = req.files.map(async file => {
+      const result = await cloudinary.uploader.upload(file.path);
+      return result.secure_url;
+    });
+
+    // wait for all images to be uploaded
+    const images = await Promise.all(uploadImages);
+
+    const newRoom = await Room.create({
+      hotel: hotel._id,
+      roomType,
+      pricePerNight: Number(pricePerNight),
+      aminities: JSON.parse(aminities),
+      images,
+      isAvalible: true,
+      maxPeople: req.body.maxPeople,
+      desc: req.body.desc,
+    });
+
+    res.status(200).json({ message: "Room has been created", room: newRoom });
   } catch (err) {
-    next(err);
+    res.status(500).json({ message: err.message });
   }
 };
 
-// updateRoom
-export const updateRoom = async (req, res, next) => {
+// api to get all rooms
+export const getAllRooms = async (req, res) => {
   try {
-    const updatedRoom = await Room.findByIdAndUpdate(
-      req.params.id,
-      { $set: req.body },
-      { new: true }
-    );
-    res.status(200).json(updatedRoom);
+    const rooms = await Room.find({ isAvalible: true }).populate({
+      path: "hotel",
+      populate: { path: "owner", select: "image" },
+    }).sort({ createdAt: -1 });
+    res.status(200).json({ success: true, rooms });
   } catch (err) {
-    next(err);
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// deleteRoom
-export const deleteRoom = async (req, res, next) => {
-  const hotelId = req.params.hotelid;
+// api to get all rooms for a specific hotel
+export const getHotelRooms = async (req, res) => {
   try {
-    await Room.findByIdAndDelete(req.params.id);
-    try {
-      await Hotel.findByIdAndUpdate(hotelId, {
-        $pull: { rooms: req.params.id },
-      });
-      res.status(200).json({ message: "Room has been deleted" });
-    } catch (err) {
-      next(err);
-    }
+    const hotelData = await Hotel.findOne({ owner: req.auth.userId });
+    const rooms = await Room.find({ hotel: hotelData._id.toString()}).populate("hotel");
+    res.status(200).json({ success: true, rooms });
   } catch (err) {
-    next(err);
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
-// getRoom
-export const getRoom = async (req, res, next) => {
+// api to toggle availability of a room
+export const toggleRoomAvailability = async (req, res) => {
   try {
     const room = await Room.findById(req.params.id);
-    res.status(200).json(room);
+    if (!room) {
+      return res.status(404).json({ message: "Room not found" });
+    }
+    room.isAvalible = !room.isAvalible;
+    await room.save();
+    res.status(200).json({ message: "Room availability has been toggled" });
   } catch (err) {
-    next(err);
-  }
-};
-
-// getAllRooms
-export const getAllRooms = async (req, res, next) => {
-  try {
-    const rooms = await Room.find();
-    res.status(200).json(rooms);
-  } catch (err) {
-    next(err);
+    res.status(500).json({ message: err.message });
   }
 };
