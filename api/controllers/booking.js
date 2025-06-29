@@ -1,5 +1,5 @@
 import Booking from "../models/booking.js";
-import Hotel from "../models/hotels.js";
+import Hotel from "../models/Hotels.js";
 import Room from "./../models/Rooms.js";
 
 // funcation to check the availability of the room

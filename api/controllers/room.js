@@ -1,5 +1,5 @@
 import { v2 as cloudinary } from "cloudinary";
-import Hotel from "../models/hotels.js";
+import Hotel from "../models/Hotels.js";
 import Room from "../models/Rooms.js";
 // This file contains the controller for room-related operations.
 // api to create a new room

@@ -1,4 +1,4 @@
-import Hotel from "../models/hotels.js";
+import Hotel from "../models/Hotels.js";
 
 // This file contains the controller for hotel-related operations.
 
